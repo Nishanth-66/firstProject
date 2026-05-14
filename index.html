@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=\, initial-scale=1.0">
+    <title>Movie Page</title>
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+  <video id="bg-video" src="./media/5427402-uhd_4096_2160_25fps.mp4" controls autoplay muted loop class="bg-video"></video>
+
+  <div class="login-box" id="loginPage">
+    <div class="card">
+    <h1> SCREEN OF SCREAMS </h1>
+    <input type="email" id="email" placeholder="Enter email" required><br>
+    <input type="password" id="password" placeholder="Enter Password" required><br>
+    <button onclick="login()">Login</button>
+    <p id="errorMsg" style="color:red;"></p>
+    <a href="#">Forgot Password?</a>
+  </div>
+  </div>
+
+    <!-- Movie Page -->
+  <div class="header" id="moviePage">
+    <h1 style="text-align: center; margin-top: 20px ;">Search For TerrorVision</h1>
+    <div class="search-box" style="text-align:center; margin-bottom:20px;">
+      <input type="text" id="searchInput" placeholder="Enter movie name">
+      <button onclick="searchMovies()">Search</button>
+    </div>
+    <ul id="movieList" style="text-align: left;"></ul>
+  </div>
+  <script>
+       
+    const apiKey = "33583da4"; 
+
+       async function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorMsg = document.getElementById("errorMsg");
+
+      try {
+        const res = await fetch("users.json");
+        const users = await res.json();
+
+        const user = users.find(u => u.email === email && u.password === password);
+
+        if (user) {
+          document.getElementById("loginPage").style.display = "none";
+          document.getElementById("moviePage").style.display = "block";
+          
+          const video = document.getElementById("bg-video");
+          if (video) video.remove();
+
+          const moviePage = document.getElementById("moviePage");
+          moviePage.style.backgroundImage = "url('./media/Copilot_20260408_141118.png')";
+          moviePage.style.backgroundSize = "cover";
+          moviePage.style.backgroundPosition = "center";
+          moviePage.style.backgroundRepeat = "no-repeat";
+          moviePage.style.width = "100%";
+          moviePage.style.minHeight = "10vh";   
+          
+            //document.getElementById("searchInput").value = "horror";
+            //searchMovies();
+
+           //document.body.style.backgroundColor = "black";
+
+        } else {
+          errorMsg.textContent = "Invalid email or password";
+        }
+      } catch (err) {
+        console.error("Error loading users.json:", err);
+      }
+    }
+
+    const searchInput = document.getElementById("search");
+const resultsDiv = document.getElementById("results");
+
+    async function searchMovies() {
+  const searchTerm = document.getElementById("searchInput").value.trim();
+  const apiUrl = `http://www.omdbapi.com/?apikey=${apiKey}&s=${searchTerm}&type=movie`;
+
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    const movieList = document.getElementById("movieList");
+    movieList.innerHTML = "";
+
+    if (data.Response === "True") {
+      for (const movie of data.Search) {
+        const detailsUrl = `https://www.omdbapi.com/?apikey=${apiKey}&i=${movie.imdbID}`;
+        const detailsRes = await fetch(detailsUrl);
+        const details = await detailsRes.json();
+
+        if (
+          details.Genre && details.Genre.includes("Horror") &&
+          details.Language && (details.Language.includes("English") || details.Language.includes("Kannada"))
+        ) {
+          const li = document.createElement("li");
+          li.classList.add("movie-card");
+
+          li.innerHTML = `
+            <img src="${movie.Poster !== "N/A" ? movie.Poster : 'https://via.placeholder.com/200x300?text=No+Image'}" alt="${movie.Title}">
+            <h3 style="color:white;">${movie.Title}</h3>
+            <p>Year: ${movie.Year}</p>
+            <p>Genre: ${details.Genre}</p>
+            <p>Language: ${details.Language}</p>
+          `;
+          movieList.appendChild(li);
+        }
+      }
+    } else {
+      movieList.innerHTML = `<li class="no-movies" style="color:white">No horror movies found for "${searchTerm}"</li>`;
+    }
+  } catch (error) {
+    console.error("Error fetching movies:", error);
+  }
+}
+  </script>
+</body>
+</html>
